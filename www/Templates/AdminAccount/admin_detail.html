@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}관리자 상세 설정 | Landmania{% endblock %}
+{% block content_title %}관리자 계정 마스터 제어판{% endblock %}
+
+{% block content %}
+<div class="row" data-aos="fade-up">
+    <div class="col-12">
+        <form action="{% url 'AdminAccount:DoUpdateAdmin' %}" method="post">
+            {% csrf_token %}
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold text-indigo">
+                        <i class="bi bi-shield-lock-fill me-2"></i>관리자 프로필 전역 설정
+                    </h5>
+                    <div>
+                        {% if admin.is_superuser %}
+                            <span class="badge bg-danger px-3 py-2 rounded-pill me-2">최고 관리자 (Superuser)</span>
+                        {% endif %}
+                        <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">ID: {{ admin.id }}</span>
+                    </div>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    <div class="row g-4">
+                        <div class="col-12 mb-2">
+                            <h6 class="fw-bold text-primary border-bottom pb-2"><i class="bi bi-person-badge me-2"></i>기본 계정 정보</h6>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold text-muted">관리자 아이디</label>
+                            <input type="text" class="form-control bg-light fw-bold" value="{{ admin.username }}" readonly>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold text-muted">이메일 주소</label>
+                            <input type="email" name="email" class="form-control" value="{{ admin.email }}" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold text-muted">성 (Last Name)</label>
+                            <input type="text" name="last_name" class="form-control" value="{{ admin.last_name }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold text-muted">이름 (First Name)</label>
+                            <input type="text" name="first_name" class="form-control" value="{{ admin.first_name }}">
+                        </div>
+
+                        <div class="col-12 mt-5 mb-2">
+                            <h6 class="fw-bold text-primary border-bottom pb-2"><i class="bi bi-gear-wide-connected me-2"></i>시스템 권한 및 상태 제어</h6>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="card p-4 border shadow-sm h-100 d-flex align-items-center justify-content-center">
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input fs-4" type="checkbox" name="is_active" id="isActive" {% if admin.is_active %}checked{% endif %} style="cursor: pointer;">
+                                    <label class="form-check-label ms-3 fw-bold fs-5" for="isActive" style="cursor: pointer; vertical-align: middle;">
+                                        계정 활성화 상태
+                                    </label>
+                                    <small class="d-block text-muted fw-normal mt-1">비활성화 시 시스템 접근이 차단됩니다.</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="card p-4 border shadow-sm h-100 d-flex align-items-center justify-content-center">
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input fs-4" type="checkbox" name="is_staff" id="isStaff" {% if admin.is_staff %}checked{% endif %} style="cursor: pointer;">
+                                    <label class="form-check-label ms-3 fw-bold fs-5" for="isStaff" style="cursor: pointer; vertical-align: middle;">
+                                        관리자 페이지 접근 권한
+                                    </label>
+                                    <small class="d-block text-muted fw-normal mt-1">스태프 권한을 부여하여 관리 기능을 허용합니다.</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="card p-4 border bg-light h-100 d-flex align-items-center justify-content-center shadow-sm">
+                                <div class="text-center">
+                                    <div class="small text-muted mb-1"><i class="bi bi-clock-history me-1"></i> 마지막 보안 접속 일시</div>
+                                    <div class="fw-bold fs-5 text-dark">{{ admin.last_login|date:"Y-m-d H:i:s"|default:"기록 없음" }}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                <div class="card-footer bg-white py-4 px-5 d-flex justify-content-between align-items-center">
+                    <button type="button" class="btn btn-outline-warning shadow-sm" data-bs-toggle="modal" data-bs-target="#modalPasswordReset">
+                        <i class="bi bi-key me-1"></i> 비밀번호 강제 초기화
+                    </button>
+                    <div>
+                        <a href="javascript:history.back();" class="btn btn-light border px-4 me-2">취소</a>
+                        <button type="submit" class="btn btn-indigo px-5 shadow">
+                            <i class="bi bi-check-all me-1"></i> 설정 저장하기
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="modalPasswordReset" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <form action="{% url 'AdminAccount:resetAdminPassword' %}" method="post">
+                {% csrf_token %}
+                <div class="modal-header bg-warning text-dark border-0">
+                    <h5 class="modal-title fw-bold">비밀번호 강제 재설정</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-5 text-center">
+                    <i class="bi bi-shield-lock text-warning display-4 mb-3"></i>
+                    <p class="text-muted mb-4">관리자 <strong>{{ admin.username }}</strong>님의 암호를 수정합니다.</p>
+                    <input type="password" name="new_password" class="form-control form-control-lg text-center shadow-sm" placeholder="새 비밀번호 입력" required>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">닫기</button>
+                    <button type="submit" class="btn btn-warning fw-bold px-4">비밀번호 업데이트</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

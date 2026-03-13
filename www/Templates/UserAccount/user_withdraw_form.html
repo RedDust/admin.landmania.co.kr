@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}회원 강제 탈퇴 | Landmania Admin{% endblock %}
+{% block content_title %}회원 강제 탈퇴{% endblock %}
+
+{% block style %}
+<style>
+  /* 🚩 탈퇴 전용 프리미엄 스타일 */
+  .withdraw-container { max-width: 900px; margin: 0 auto; }
+  
+  /* 대상 회원 요약 카드 - 클린 화이트 스타일 */
+  .user-summary-card {
+    background: #fff;
+    border: 1px solid #e3e6f0;
+    border-radius: 1rem;
+    transition: all 0.3s ease;
+  }
+  .user-summary-card:hover { transform: translateY(-3px); box-shadow: 0 1rem 3rem rgba(0,0,0,0.075) !important; }
+  
+  /* 경고 구역 - 소프트 레드 그라데이션 */
+  .danger-zone-alert {
+    background: linear-gradient(45deg, #fff5f5 0%, #ffffff 100%);
+    border-left: 5px solid #e74a3b;
+    border-radius: 0.75rem;
+  }
+  
+  /* 라디오 버튼 카드 스타일 */
+  .reason-card {
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid #e3e6f0;
+    border-radius: 0.5rem;
+  }
+  .reason-card:hover { background-color: #f8f9fc; border-color: #4e73df; }
+  .form-check-input:checked + .form-check-label .reason-card {
+    border-color: #e74a3b;
+    background-color: #fff5f5;
+  }
+
+  /* 확인 섹션 배경 */
+  .final-confirmation {
+    background-color: #f8f9fc;
+    border-radius: 0.75rem;
+    padding: 20px;
+    border: 1px solid #e3e6f0;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="withdraw-container" data-aos="fade-up">
+  <div class="card shadow-lg border-0 mb-5">
+    <div class="card-header bg-white py-3 border-bottom">
+      <div class="d-flex align-items-center">
+        <div class="bg-danger-subtle p-2 rounded-3 me-3">
+          <i class="bi bi-person-x-fill text-danger fs-4"></i>
+        </div>
+        <div>
+          <h5 class="mb-0 fw-bold text-dark">회원 강제 탈퇴 처리</h5>
+          <small class="text-muted">관리자 권한으로 해당 회원의 계정을 영구 삭제합니다.</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body p-4 p-md-5">
+      <div class="user-summary-card p-4 mb-4 border shadow-sm">
+        <div class="row align-items-center">
+          <div class="col-md-2 text-center mb-3 mb-md-0">
+            <img src="{{ user.profile_image|default:'/static/img/user2-160x160.jpg' }}" class="img-thumbnail rounded-circle" style="width: 80px; height: 80px; object-fit: cover;">
+          </div>
+          <div class="col-md-10">
+            <div class="row g-3">
+              <div class="col-6 col-md-3">
+                <label class="small text-muted d-block">닉네임</label>
+                <span class="fw-bold">{{ user.nickname }}</span>
+              </div>
+              <div class="col-6 col-md-4">
+                <label class="small text-muted d-block">이메일</label>
+                <span class="fw-bold">{{ user.dec_email }}</span>
+              </div>
+              <div class="col-6 col-md-3">
+                <label class="small text-muted d-block">보유 포인트</label>
+                <span class="fw-bold text-primary">{{ user.point|default:0 }} P</span>
+              </div>
+              <div class="col-6 col-md-2">
+                <label class="small text-muted d-block">등급</label>
+                <span class="badge bg-secondary">Lv.{{ user.level }}</span>
+              </div>
+              <div class="col-6 col-md-2">
+                <label class="small text-muted d-block">상태</label>
+                    {% if user.status == 'ADMIN' %}
+                        <span class="badge bg-danger">관리자</span>
+                    {% elif user.status == 'ASSOCIATE' %}
+                        <span class="badge bg-info-subtle text-info border border-info-subtle">준회원</span>
+                    {% elif user.status == 'GENERAL' %}
+                        <span class="badge bg-success">정회원</span>
+                    {% else %}
+                        <span class="badge bg-secondary">{{ user.status }}</span>
+                    {% endif %}                
+              </div>              
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="danger-zone-alert p-4 mb-5 shadow-sm">
+        <h6 class="fw-bold text-danger mb-3"><i class="bi bi-exclamation-triangle-fill me-2"></i>최종 확인 및 주의사항</h6>
+        <ul class="mb-0 small text-dark opacity-75">
+          <li class="mb-2">탈퇴 처리 시 해당 회원의 <b>모든 데이터(게시물, 포인트, 설정)</b>가 즉시 소멸됩니다.</li>
+          <li class="mb-2">이 작업은 시스템에 의해 기록되며, <b>복구가 불가능</b>합니다.</li>
+          <li>소셜 로그인(Naver, Kakao 등) 연동 정보도 함께 해제됩니다.</li>
+        </ul>
+      </div>
+
+      <form action="{% url 'UserAccount:doWithdraw' %}" method="post" id="forceWithdrawForm">
+        {% csrf_token %}
+        <input type="hidden" name="user_seq" value="{{ user.seq }}">
+
+        <div class="mb-4">
+          <label class="form-label fw-bold text-dark"><i class="bi bi-pencil-square me-1"></i> 강제 탈퇴 사유 선택</label>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="reason-card d-block p-3 h-100" for="reason1">
+                <div class="form-check m-0">
+                  <input class="form-check-input" type="radio" name="withdraw_reason" id="reason1" value="policy_violation" required>
+                  <span class="form-check-label fw-bold small ms-1">운영 정책 및 약관 위반</span>
+                </div>
+              </label>
+            </div>
+            <div class="col-md-6">
+              <label class="reason-card d-block p-3 h-100" for="reason2">
+                <div class="form-check m-0">
+                  <input class="form-check-input" type="radio" name="withdraw_reason" id="reason2" value="spam_abuse">
+                  <span class="form-check-label fw-bold small ms-1">부적절한 홍보 및 스팸 유포</span>
+                </div>
+              </label>
+            </div>
+            <div class="col-md-6">
+              <label class="reason-card d-block p-3 h-100" for="reason3">
+                <div class="form-check m-0">
+                  <input class="form-check-input" type="radio" name="withdraw_reason" id="reason3" value="customer_request">
+                  <span class="form-check-label fw-bold small ms-1">회원 본인 요청 (고객센터 접수)</span>
+                </div>
+              </label>
+            </div>
+            <div class="col-md-6">
+              <label class="reason-card d-block p-3 h-100" for="reason4">
+                <div class="form-check m-0">
+                  <input class="form-check-input" type="radio" name="withdraw_reason" id="reason4" value="etc">
+                  <span class="form-check-label fw-bold small ms-1">기타 사유 (하단 직접 입력)</span>
+                </div>
+              </label>
+            </div>
+          </div>
+          <textarea class="form-control mt-3 border-light-subtle shadow-sm" name="admin_note" rows="3" placeholder="내부 기록용 상세 사유를 입력하세요. (필수)" required></textarea>
+        </div>
+
+        <div class="mb-5">
+          <label class="form-label fw-bold text-primary"><i class="bi bi-lock-fill me-1"></i> 관리자 인증</label>
+          <input type="password" name="admin_password" class="form-control form-control-lg border-primary-subtle shadow-sm" placeholder="본인의 관리자 비밀번호를 입력하세요" required>
+        </div>
+
+        <div class="final-confirmation mb-5">
+          <div class="form-check mb-0">
+            <input class="form-check-input border-danger" type="checkbox" id="finalCheck" required>
+            <label class="form-check-label fw-bold text-danger small" for="finalCheck">
+              위 내용과 경고 사항을 모두 확인하였으며, 이에 동의하여 강제 탈퇴를 진행합니다.
+            </label>
+          </div>
+        </div>
+
+        <div class="row g-2">
+          <div class="col-sm-8">
+            <button type="submit" class="btn btn-danger btn-lg w-100 py-3 shadow">
+              <i class="bi bi-person-x me-2"></i>강제 탈퇴 최종 승인
+            </button>
+          </div>
+          <div class="col-sm-4">
+            <a href="{% url 'UserAccount:userDetail' user.seq %}" class="btn btn-light btn-lg w-100 py-3 border">
+              취소
+            </a>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.getElementById('forceWithdrawForm').addEventListener('submit', function(e) {
+    const isChecked = document.getElementById('finalCheck').checked;
+    if(!isChecked) {
+      e.preventDefault();
+      Swal.fire('동의 필요', '최종 확인 체크박스에 동의해 주세요.', 'error');
+      return;
+    }
+
+    e.preventDefault();
+    Swal.fire({
+      title: '정말 탈퇴 처리하시겠습니까?',
+      text: "회원 {{ user.nickname }}님의 계정이 즉시 영구 삭제됩니다.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#e74a3b',
+      cancelButtonColor: '#858796',
+      confirmButtonText: '네, 탈퇴 승인합니다',
+      cancelButtonText: '취소',
+      reverseButtons: true
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.submit();
+      }
+    });
+  });
+</script>
+{% endblock %}

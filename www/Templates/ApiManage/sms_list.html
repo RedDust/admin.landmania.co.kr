@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block page_title %}SMS 발송 이력{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h3 class="card-title">전체 내역: <strong>{{ total_count }}</strong>건</h3>
+        
+        <div class="btn-group">
+            <a href="?result=" class="btn btn-sm {% if not result_filter %}btn-dark{% else %}btn-outline-dark{% endif %}">전체</a>
+            <a href="?result=s" class="btn btn-sm {% if result_filter == 's' %}btn-success{% else %}btn-outline-success{% endif %}">성공</a>
+            <a href="?result=f" class="btn btn-sm {% if result_filter == 'f' %}btn-danger{% else %}btn-outline-danger{% endif %}">실패</a>
+        </div>
+    </div>
+    
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 80px;">번호</th>
+                        <th style="width: 150px;">수신번호(복호화)</th>
+                        <th>발송 메세지</th>
+                        <th style="width: 120px;">업체</th>
+                        <th style="width: 120px;">유형</th>
+                        <th style="width: 100px;">결과</th>
+                        <th style="width: 150px;">발송일</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in records %}
+                    <tr>
+                        <td>{{ row.seq }}</td>
+                        <td>
+                            <div class="d-flex flex-column">
+                                <strong>{{ row.dec_phone }}</strong>
+                                <small class="text-muted">{{ row.user_nickname|default:"비회원" }}</small>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="text-wrap" style="max-width: 400px; font-size: 0.9rem;">
+                                {{ row.message }}
+                            </div>
+                        </td>
+                        <td><span class="badge text-bg-light border">{{ row.company_nm }}</span></td>
+                        <td>{{ row.type_nm }}</td>
+                        <td>
+                            {% if row.result == '1' %}
+                                <span class="badge text-bg-success">성공</span>
+                            {% else %}
+                                <span class="badge text-bg-danger">실패</span>
+                            {% endif %}
+                        </td>
+                        <td><small>{{ row.created_at|date:"Y-m-d H:i" }}</small></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" class="text-center py-4">발송 내역이 없습니다.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card-footer bg-white d-flex justify-content-between">
+        <div class="small text-muted">Showing {{ records|length }} entries</div>
+        <nav>
+            <ul class="pagination pagination-sm mb-0">
+                {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&result={{ result_filter }}">이전</a></li>
+                {% endif %}
+                <li class="page-item active"><a class="page-link" href="#">{{ page_obj.number }}</a></li>
+                {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&result={{ result_filter }}">다음</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+</div>
+{% endblock %}

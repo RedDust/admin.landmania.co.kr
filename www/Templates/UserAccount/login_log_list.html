@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block page_title %}로그인 접속 이력{% endblock %}
+{% block content_title %}로그인 접속 이력{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header bg-white">
+        <h3 class="card-title">전체 접속 로그: <strong>{{ total_count }}</strong>건</h3>
+    </div>
+    
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-center">번호</th>
+                        <th class="text-center">사용자(닉네임/이메일)</th>
+                        <th class="text-center">가입 경로</th>                        
+                        <th class="text-center">접속 IP(복호화)</th>
+                        <th class="text-center">상태</th>
+                        <th class="text-center">기기 정보(UA)</th>
+                        <th class="text-center">일시</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td class="text-center">{{ log.seq }}</td>
+                        <td class="text-center">
+                            <div class="d-flex flex-column">
+                                <span class="fw-bold">{{ log.nickname|default:"비회원/삭제됨" }}</span>
+                                <small class="text-muted">{{ log.dec_user_email }}</small>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            {% if log.provider == 'landmania' %}
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1">
+                                    <i class="bi bi-shield-check me-1"></i>랜드매니아
+                                </span>
+                            {% elif log.provider == 'naver' %}
+                                <span class="badge px-2 py-1" style="background-color: #03C75A; color: white;">
+                                    <i class="bi bi-chat-fill me-1"></i>네이버
+                                </span>
+                            {% elif log.provider == 'kakao' %}
+                                <span class="badge px-2 py-1" style="background-color: #FEE500; color: #191919;">
+                                    <i class="bi bi-chat-fill me-1"></i>카카오
+                                </span>
+                            {% elif log.provider == 'google' %}
+                                <span class="badge bg-white text-dark border px-2 py-1">
+                                    <i class="bi bi-google me-1 text-danger"></i>구글
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary px-2 py-1">{{ log.provider|upper }}</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-center"><code>{{ log.dec_ip }}</code></td>
+                        <td class="text-center">
+                            {% if log.status == 'SUCCESS' %}
+                                <span class="badge text-bg-success">성공</span>
+                            {% elif log.status == 'FAIL' %}
+                                <span class="badge text-bg-danger">실패</span>
+                                <div class="small text-danger">{{ log.fail_reason }}</div>
+                            {% else %}
+                                <span class="badge text-bg-warning">잠금</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span title="{{ log.user_agent }}" style="cursor:help;">
+                                {{ log.short_agent }}
+                            </span>
+                        </td>
+                        <td class="text-center">{{ log.created_at|date:"Y-m-d H:i:s" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-center py-4">로그 기록이 없습니다.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card-footer bg-white d-flex justify-content-between">
+        <div>현재 {{ logs|length }}개 출력 중</div>
+        <nav>
+            <ul class="pagination pagination-sm mb-0">
+                {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">이전</a></li>&nbsp;
+                {% endif %}
+                <li class="page-item active"><a class="page-link" href="#">{{ page_obj.number }}</a></li> &nbsp;
+                {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">다음</a></li> 
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+</div>
+{% endblock %}

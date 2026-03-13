@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block page_title %}회원 상세 정보 | LandMania{% endblock %}
+{% block content_title %}{{user.dec_email}} | {{user.provider}} 회원 상세{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-xl-4 col-lg-5">
+        <div class="card card-indigo card-outline shadow-sm mb-4">
+            <div class="card-body box-profile">
+                <div class="text-center mb-3">
+                    <div class="profile-user-img-wrapper d-inline-block position-relative">
+                        <img class="profile-user-img img-fluid img-circle border-3 border-indigo p-1" 
+                             src="{{ user.profile_image|default:'/static/img/user2-160x160.jpg' }}" alt="User profile" style="width:120px; height:120px;">
+                        <span class="position-absolute bottom-0 end-0 badge rounded-pill {% if user.status == 'ADMIN' %}bg-danger{% else %}bg-success{% endif %}">
+                            {{ user.status }}
+                        </span>
+                    </div>
+                </div>
+                <h3 class="profile-username text-center fw-bold">{{ user.nickname }}</h3>
+                <p class="text-muted text-center">{{ user.dec_name|default:"실명 미등록" }}</p>
+
+                <div class="d-flex justify-content-around my-4 border-top border-bottom py-3">
+                    <div class="text-center">
+                        <h5 class="mb-0 fw-bold text-primary">{{ user.point|default:0 }}</h5>
+                        <small class="text-muted">포인트</small>
+                    </div>
+                    <div class="text-center border-start border-end px-4">
+                        <h5 class="mb-0 fw-bold">{{ user.level }}</h5>
+                        <small class="text-muted">레벨</small>
+                    </div>
+                    <div class="text-center">
+                        <div class="mb-1">
+                            {% if user.provider == 'landmania' %}
+                                <span class="badge bg-indigo-subtle text-indigo border border-indigo-subtle px-2 py-1">
+                                    <i class="bi bi-shield-check me-1"></i>랜드매니아
+                                </span>
+                            {% elif user.provider == 'naver' %}
+                                <span class="badge px-2 py-1" style="background-color: #03C75A; color: white;">
+                                    <i class="bi bi-chat-fill me-1"></i>네이버
+                                </span>
+                            {% elif user.provider == 'kakao' %}
+                                <span class="badge px-2 py-1" style="background-color: #FEE500; color: #191919;">
+                                    <i class="bi bi-chat-fill me-1"></i>카카오
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary px-2 py-1">{{ user.provider|upper }}</span>
+                            {% endif %}
+                        </div>
+                        <small class="text-muted">가입채널</small>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalPoint">
+                        <i class="bi bi-coin me-1"></i> 포인트 지급/차감
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalStatus">
+                        <i class="bi bi-person-gear me-1"></i> 회원 상태 변경
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-light"><h3 class="card-title fw-bold">접속 정보</h3></div>
+            <div class="card-body small">
+                <div class="mb-2"><strong>최근 접속 IP:</strong> <span class="text-indigo float-end">{{ user.dec_ip|default:"-" }}</span></div>
+                <div class="mb-2"><strong>가입 일시:</strong> <span class="float-end">{{ user.created_at|date:"Y-m-d H:i" }}</span></div>
+                <div class="mb-0"><strong>정보 수정:</strong> <span class="float-end">{{ user.updated_at|date:"Y-m-d H:i" }}</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-8 col-lg-7">
+        <div class="card shadow-sm border-0">
+            <div class="card-header p-2 bg-white">
+                <ul class="nav nav-pills custom-pills">
+                    <li class="nav-item"><a class="nav-link active" href="#info" data-bs-toggle="tab">기본 인적사항</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#login_logs" data-bs-toggle="tab">접속 이력</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#security" data-bs-toggle="tab">보안 및 인증</a></li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="info">
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <label class="text-muted small">고유 SEQ</label>
+                                <div class="p-2 border rounded bg-light"># {{ user.seq }}</div>
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="text-muted small">이메일 주소</label>
+                                <div class="p-2 border rounded bg-white text-dark fw-bold">{{ user.dec_email }}</div>
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="text-muted small">연락처</label>
+                                <div class="p-2 border rounded bg-white">{{ user.dec_phone|default:"- 미등록 -" }}</div>
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="text-muted small">서비스 닉네임</label>
+                                <div class="p-2 border rounded bg-white">{{ user.nickname }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-pane" id="login_logs">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover align-middle mb-0" style="font-size: 0.85rem;">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 160px;">일시</th>
+                                        <th class="text-center">결과</th>
+                                        <th>IP 주소</th>
+                                        <th>기기/브라우저</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for log in login_logs %}
+                                    <tr>
+                                        <td class="text-muted">{{ log.created_at|date:"Y-m-d H:i:s" }}</td>
+                                        <td class="text-center">
+                                            {% if log.status == 'SUCCESS' %}
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle">성공</span>
+                                            {% elif log.status == 'FAIL' %}
+                                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle" title="{{ log.fail_reason }}">실패</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ log.status }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td><code>{{ log.dec_ip }}</code></td>
+                                        <td>
+                                            <div class="text-truncate" style="max-width: 250px;" title="{{ log.user_agent }}">
+                                                {{ log.user_agent }}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr><td colspan="4" class="text-center py-4 text-muted">기록 없음</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane" id="security">
+                        <h6 class="fw-bold mb-3"><i class="bi bi-check2-all me-2"></i>상세 인증 현황</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-3">
+                                <div class="card border text-center p-3 {% if user.verification.0 == '1' %}bg-success-subtle border-success{% else %}bg-light{% endif %}">
+                                    <i class="bi {% if user.verification.0 == '1' %}bi-envelope-check-fill text-success{% else %}bi-envelope-exclamation text-muted{% endif %} fs-2 mb-2"></i>
+                                    <div class="small fw-bold">이메일 인증</div>
+                                    <div class="mt-1">
+                                        {% if user.verification.0 == '1' %}<span class="badge bg-success">완료</span>{% else %}<span class="badge bg-secondary">미인증</span>{% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="card border text-center p-3 {% if user.verification.1 == '1' %}bg-primary-subtle border-primary{% else %}bg-light{% endif %}">
+                                    <i class="bi {% if user.verification.1 == '1' %}bi-phone-vibrate-fill text-primary{% else %}bi-phone text-muted{% endif %} fs-2 mb-2"></i>
+                                    <div class="small fw-bold">모바일 인증</div>
+                                    <div class="mt-1">
+                                        {% if user.verification.1 == '1' %}<span class="badge bg-primary">완료</span>{% else %}<span class="badge bg-secondary">미인증</span>{% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="card border text-center p-3 {% if user.verification.2 == '1' %}bg-info-subtle border-info{% else %}bg-light{% endif %}">
+                                    <i class="bi {% if user.verification.2 == '1' %}bi-person-check-fill text-info{% else %}bi-person-exclamation text-muted{% endif %} fs-2 mb-2"></i>
+                                    <div class="small fw-bold">실명 인증 (CI)</div>
+                                    <div class="mt-1">
+                                        {% if user.verification.2 == '1' %}<span class="badge bg-info">완료</span>{% else %}<span class="badge bg-secondary">미인증</span>{% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="card border text-center p-3 {% if user.verification.3 == '1' %}bg-warning-subtle border-warning{% else %}bg-light{% endif %}">
+                                    <i class="bi {% if user.verification.3 == '1' %}bi-bank2 text-warning{% else %}bi-bank text-muted{% endif %} fs-2 mb-2"></i>
+                                    <div class="small fw-bold">계좌 인증</div>
+                                    <div class="mt-1">
+                                        {% if user.verification.3 == '1' %}<span class="badge bg-warning text-dark">완료</span>{% else %}<span class="badge bg-secondary">미인증</span>{% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h6 class="fw-bold mb-2">원천 데이터 확인</h6>
+                        <ul class="list-group list-group-flush border-top border-bottom">
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                인증 비트 원본 <span class="badge bg-dark font-monospace fs-6 px-3">{{ user.verification|default:"0000" }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                본인확인 CI 정보 {% if user.ci %}<code class="text-truncate ms-4" style="max-width: 300px;">{{ user.ci }}</code>{% else %}<span class="text-muted">데이터 없음</span>{% endif %}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            {% url 'UserAccount:userWithdrawForm' user.seq as withdraw_url %}
+            <div class="card-footer bg-white py-3 text-end">
+                <a href="{% url 'UserAccount:user_list' %}" class="btn btn-light border">목록으로</a>
+                <button type="button" class="btn btn-danger shadow-sm ms-1" 
+                    onclick="confirmWithdraw('{{ withdraw_url }}')">강제 탈퇴 처리</button>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalPoint" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form action="{% url 'UserAccount:updatePoint' %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="user_seq" value="{{ user.seq }}">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">포인트 관리</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">현재 잔액: <strong>{{ user.point }} P</strong></label>
+                        <select name="point_type" class="form-select mb-2">
+                            <option value="plus">포인트 지급 (+)</option>
+                            <option value="minus">포인트 차감 (-)</option>
+                        </select>
+                        <input type="number" name="amount" class="form-control" required>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label small text-muted">사유 입력</label>
+                        <input type="text" name="reason" class="form-control form-control-sm" placeholder="지급/차감 사유">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">취소</button>
+                    <button type="submit" class="btn btn-primary">변경 적용</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalStatus" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form action="{% url 'UserAccount:updateState' %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="user_seq" value="{{ user.seq }}">
+
+                <div class="modal-header">
+                    <h5 class="modal-title text-indigo fw-bold">회원 상태 제어판</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center p-4">
+                    <p class="mb-4"><strong>{{ user.nickname }}</strong> 회원의 등급 및 계정 상태를 <br>어떻게 변경하시겠습니까?</p>
+                    <div class="d-grid gap-2">
+                        {% for value, label in status_list %}
+                            <button type="submit" name="new_state" value="{{ value }}" 
+                                    class="btn {% if user.status == value %}btn-indigo{% else %}btn-outline-secondary{% endif %} py-2 fw-bold">
+                                {{ label }} {% if user.status == value %}(현재){% endif %}
+                            </button>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light w-100" data-bs-dismiss="modal">취소</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function confirmWithdraw(url) {
+        // 관리자가 실수로 누르는 것을 방지하기 위한 최종 확인
+        if(confirm("확인을 누르면 탈퇴 사유 입력 페이지로 이동합니다.")) {
+            // 확인 시 Django URL로 이동
+            location.href = url;
+        }
+    }
+</script>
+{% endblock %}

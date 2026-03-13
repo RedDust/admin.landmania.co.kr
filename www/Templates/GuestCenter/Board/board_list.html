@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block page_title %}비회원 문의 관리 | LandMania{% endblock %}
+{% block content_title %}비회원 문의 내역 (전체 상태){% endblock %}
+
+{% block content %}
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body bg-light border-bottom">
+        <form method="get" action="{% url 'GuestCenter:Board:GuestBoardList'%}" class="row g-2 align-items-center">
+            <div class="col-auto">
+                <select name="delete_status" class="form-select shadow-sm border-primary">
+                    <option value="all" {% if delete_status == 'all' %}selected{% endif %}>전체 상태</option>
+                    <option value="N" {% if delete_status == 'N' %}selected{% endif %}>정상 게시글</option>
+                    <option value="Y" {% if delete_status == 'Y' %}selected{% endif %}>삭제된 글</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <select name="search_type" class="form-select shadow-sm">
+                    <option value="all" {% if search_type == 'all' %}selected{% endif %}>검색 필터</option>
+                    <option value="name" {% if search_type == 'name' %}selected{% endif %}>작성자</option>
+                    <option value="title" {% if search_type == 'title' %}selected{% endif %}>제목</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <div class="input-group shadow-sm">
+                    <input type="text" name="keyword" class="form-control" placeholder="검색어 입력..." value="{{ keyword }}">
+                    <button type="submit" class="btn btn-primary px-4">검색</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-center" style="width: 80px;">SEQ</th>
+                        <th class="text-center">상태</th> <th>제목</th>
+                        <th>작성자 정보</th>
+                        <th class="text-center">답변상태</th>
+                        <th class="text-center">등록일</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr {% if item.is_deleted == 'Y' %}style="background-color: #fff5f5; opacity: 0.8;"{% endif %}>
+                        <td class="text-center text-muted">#{{ item.seq }}</td>
+                        <td class="text-center">
+                            {% if item.is_deleted == 'Y' %}
+                                <span class="badge bg-danger shadow-sm">삭제됨</span>
+                            {% else %}
+                                <span class="badge bg-success-subtle text-success border border-success-subtle">정상</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center {% if item.is_deleted == 'Y' %}text-decoration-line-through text-muted{% endif %}">
+                                {% if item.is_private == 'Y' %}<i class="bi bi-lock-fill text-warning me-1"></i>{% endif %}
+                                <a href="{% url 'GuestCenter:Board:GuestBoardDetail' item.seq %}" 
+                                   class="text-decoration-none fw-bold {% if item.is_deleted == 'Y' %}text-muted{% else %}text-dark{% endif %}">
+                                    {{ item.title|truncatechars:40 }}
+                                </a>
+                            </div>
+                        </td>
+                        <td class="{% if item.is_deleted == 'Y' %}text-muted{% endif %}">
+                            <div class="fw-bold">{{ item.author_name }}</div>
+                            <small>{{ item.dec_email }}</small>
+                        </td>
+                        <td class="text-center">
+                            {% if item.status == 'WAITING' %}
+                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle">답변대기</span>
+                            {% else %}
+                                <span class="badge bg-success">답변완료</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center text-muted">
+                            <small class="d-block">{{ item.created_at|date:"Y-m-d" }}</small>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-center py-5 text-muted">데이터가 없습니다.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<div class="card-footer bg-white py-3">
+    <div class="d-flex justify-content-between align-items-center">
+        <div class="text-muted small">
+            표시: <strong>{{ items|length }}</strong> / 전체: <strong>{{ total_count }}</strong>건
+            (페이지 <strong>{{ page_obj.number }}</strong> / {{ page_obj.paginator.num_pages }})
+        </div>
+
+        <nav aria-label="Page navigation">
+            <ul class="pagination pagination-sm mb-0">
+                
+                {# 1. 첫 페이지로 이동 #}
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1&search_type={{ search_type }}&keyword={{ keyword }}&delete_status={{ delete_status }}" title="처음으로">
+                        <i class="bi bi-chevron-double-left"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}&search_type={{ search_type }}&keyword={{ keyword }}&delete_status={{ delete_status }}">
+                        이전
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-double-left"></i></span></li>
+                <li class="page-item disabled"><span class="page-link">이전</span></li>
+                {% endif %}
+
+                {# 2. 현재 페이지 표시 (중간 번호 노출은 생략하고 현재 페이지만 강조) #}
+                <li class="page-item active shadow-sm" aria-current="page">
+                    <span class="page-link px-3">{{ page_obj.number }}</span>
+                </li>
+
+                {# 3. 다음 페이지 및 끝 페이지 이동 #}
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}&search_type={{ search_type }}&keyword={{ keyword }}&delete_status={{ delete_status }}">
+                        다음
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&search_type={{ search_type }}&keyword={{ keyword }}&delete_status={{ delete_status }}" title="끝으로">
+                        <i class="bi bi-chevron-double-right"></i>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">다음</span></li>
+                <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-double-right"></i></span></li>
+                {% endif %}
+
+            </ul>
+        </nav>
+    </div>
+</div>
+
+{% endblock %}

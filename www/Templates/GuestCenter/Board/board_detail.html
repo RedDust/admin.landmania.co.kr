@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+{% load security_filters %}
+{% load static %}
+
+{% block page_title %}비회원 문의 상세 관리 | LandMania{% endblock %}
+{% block content_title %}비회원 문의 상세 내역{% endblock %}
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.9.0/dist/summernote-lite.min.css" rel="stylesheet">
+<style>
+    /* 에디터 디자인 보정 */
+    .note-editor.note-frame { border: 1px solid #dee2e6; box-shadow: none; }
+    .note-status-output { display: none; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h3 class="card-title fw-bold">
+                    <span class="badge bg-secondary-subtle text-secondary border me-2">{{ item.category_label }}</span>
+                    {{ item.title }}
+                </h3>
+                <div class="text-muted small">
+                    <i class="bi bi-eye me-1"></i> 조회수: {{ item.hit }}
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <div class="row bg-light rounded p-3 mb-4 border">
+                    <div class="col-sm-6">
+                        <label class="text-muted small d-block">작성자명</label>
+                        <span class="fw-bold">{{ item.author_name }}</span>
+                    </div>
+                    <div class="col-sm-6 text-sm-end">
+                        <label class="text-muted small d-block">등록 일시</label>
+                        <span>{{ item.created_at|date:"Y-m-d H:i:s" }}</span>
+                    </div>
+                </div>
+
+                <div class="qna-content mt-2 mb-4 p-2" style="min-height: 200px; line-height: 1.6;">
+                    {{ item.content|sanitize|safe }}
+                </div>
+            </div>
+            <div class="card-footer bg-white py-3">
+                <a href="{% url 'GuestCenter:Board:GuestBoardList' %}" class="btn btn-light border">
+                    <i class="bi bi-list me-1"></i> 목록으로
+                </a>
+                <button type="button" class="btn btn-outline-danger float-end" onclick="deletePost('{{ item.seq }}')">
+                    <i class="bi bi-trash me-1"></i> 삭제하기
+                </button>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-indigo">
+            <div class="card-header bg-indigo text-white">
+                <h3 class="card-title fw-bold">
+                    <i class="bi bi-chat-left-dots-fill me-2"></i> 관리자 답변 작성
+                </h3>
+            </div>
+            <form action="{% url 'GuestCenter:Board:GuestBoardAnswerSave' %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="seq" value="{{ item.seq }}">
+                
+                <div class="card-body">
+                    {% if item.status == 'COMPLETED' %}
+                    <div class="alert alert-success-subtle border-success-subtle d-flex align-items-center mb-3">
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        <div>
+                            이 문의는 <strong>{{ item.answered_at|date:"Y-m-d H:i" }}</strong>에 답변이 완료되었습니다.
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning-subtle border-warning-subtle small mb-3">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        답변을 저장하면 문의 상태가 <strong>'답변완료(COMPLETED)'</strong>로 즉시 변경됩니다.
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <textarea name="answer_content" id="answer_editor" class="form-control" rows="10" 
+                                  placeholder="회원에게 전달할 답변 내용을 상세히 입력하세요.">{{ item.answer_content|default:'' }}</textarea>
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-white text-end py-3">
+                    <button type="submit" class="btn btn-indigo px-5 fw-bold shadow-sm">
+                        {% if item.status == 'COMPLETED' %}답변 수정하기{% else %}답변 등록하기{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white"><h3 class="card-title fw-bold">고객 연락 정보</h3></div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+                        <span class="text-muted"><i class="bi bi-envelope me-2"></i>이메일</span>
+                        <span class="fw-bold">{{ item.dec_email }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+                        <span class="text-muted"><i class="bi bi-phone me-2"></i>연락처</span>
+                        <span class="fw-bold">{{ item.dec_phone }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+                        <span class="text-muted"><i class="bi bi-globe me-2"></i>작성 IP</span>
+                        <code class="small">{{ item.dec_ip }}</code>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+                        <span class="text-muted"><i class="bi bi-eye-slash me-2"></i>비공개 여부</span>
+                        <span>
+                            {% if item.is_private == 'Y' %}
+                                <span class="badge bg-warning text-dark">비공개</span>
+                            {% else %}
+                                <span class="badge bg-light text-dark border">전체공개</span>
+                            {% endif %}
+                        </span>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-footer bg-light small text-muted">
+                <i class="bi bi-shield-lock me-1"></i> 이 정보는 AES-256으로 복호화되었습니다.
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-white"><h3 class="card-title fw-bold">진행 상태</h3></div>
+            <div class="card-body text-center py-5">
+                {% if item.status == 'WAITING' %}
+                    <div class="mb-3">
+                        <i class="bi bi-clock-history text-warning display-4"></i>
+                    </div>
+                    <h4 class="fw-bold text-warning">답변 대기 중</h4>
+                    <p class="text-muted small">신속한 답변이 필요합니다.</p>
+                {% else %}
+                    <div class="mb-3">
+                        <i class="bi bi-check-all text-success display-4"></i>
+                    </div>
+                    <h4 class="fw-bold text-success">처리 완료</h4>
+                    <p class="text-muted small">답변이 정상적으로 등록된 상태입니다.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.9.0/dist/summernote-lite.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.9.0/dist/lang/summernote-ko-KR.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        // ✅ Summernote 초기화
+        $('#answer_editor').summernote({
+            placeholder: '회원에게 전달할 답변 내용을 상세히 입력하세요.',
+            tabsize: 2,
+            height: 300,
+            lang: 'ko-KR', // 한글 설정
+            toolbar: [
+                ['style', ['style']],
+                ['font', ['bold', 'underline', 'clear']],
+                ['color', ['color']],
+                ['para', ['ul', 'ol', 'paragraph']],
+                ['table', ['table']],
+                ['insert', ['link', 'picture', 'video']],
+                ['view', ['fullscreen', 'codeview', 'help']]
+            ]
+        });
+    });
+
+    // 게시글 삭제 확인 함수
+    function deletePost(seq) {
+        Swal.fire({
+            title: '정말 삭제하시겠습니까?',
+            text: "삭제된 데이터는 목록에서 더 이상 보이지 않습니다.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '삭제 실행',
+            cancelButtonText: '취소'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // ✅ Django의 URL Name을 사용하여 안전하게 이동
+                // (주의: 템플릿 태그 내에서 seq를 넘기기 위해 문자열 조작이 필요할 수 있으므로 아래 형식을 권장합니다)
+                location.href = "{% url 'GuestCenter:Board:GuestDeleteBoard' 0 %}".replace('0', seq);
+            }
+        });
+    }
+
+    // ✅ 답변 저장 시 검증 (Summernote 대응)
+    document.querySelector('form').onsubmit = function() {
+        // Summernote는 빈 값이라도 <p><br></p> 등을 생성하므로 텍스트만 추출해 검사
+        const content = $('#answer_editor').summernote('code').replace(/<\/?[^>]+(>|$)/g, "").trim();
+        if(!content) {
+            Swal.fire('알림', '답변 내용을 입력해 주세요.', 'warning');
+            return false;
+        }
+        return true;
+    };
+</script>
+{% endblock %}

@@ -1,0 +1,23 @@
+# Python 가상환경
+venv/
+.venv/
+__pycache__/
+
+# 보안 및 인증 (중요!)
+.env
+*.json
+!package.json
+!package-lock.json
+
+# 데이터베이스 및 로그
+db.sqlite3
+logs/
+
+# 압축 파일 및 설치 파일
+*.tar.gz
+*.tar.gz.*
+AdminLTE-4.0.0-rc3/
+
+# 운영체제 및 에디터 설정
+.DS_Store
+.vscode/

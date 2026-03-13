@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}메인 대시보드 | Landmania{% endblock %}
+{% block content_title %}대시보드{% endblock %}
+
+
+
+{% block extra_css %}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/apexcharts@3.37.1/dist/apexcharts.css" crossorigin="anonymous" />
+{% endblock %}
+
+
+
+{% block content %}
+
+
+
+
+
+
+
+{% endblock %}
+
+
+
+{% block extra_js %}
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.37.1/dist/apexcharts.min.js" crossorigin="anonymous"></script>
+  <script>
+    const options = {
+      series: [{ name: 'Digital Goods', data: [28, 48, 40, 19, 86, 27, 90] }],
+      chart: { height: 300, type: 'area' },
+      colors: ['#0d6efd'],
+    };
+    const chart = new ApexCharts(document.querySelector('#revenue-chart'), options);
+    chart.render();
+  </script>
+{% endblock %}

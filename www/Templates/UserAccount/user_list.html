@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block page_title %}회원 관리 (Raw SQL 모드){% endblock %}
+{% block content_title %}회원 관리{% endblock %}
+
+{% block content %}
+
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body bg-light border-bottom">
+        <form method="get" action="." class="row g-2 align-items-center">
+            <div class="col-auto">
+                <select name="search_type" class="form-select shadow-sm">
+                    <option value="all" {% if search_type == 'all' %}selected{% endif %}>전체 검색</option>
+                    <option value="name" {% if search_type == 'name' %}selected{% endif %}>이름(닉네임)</option>
+                    <option value="email" {% if search_type == 'email' %}selected{% endif %}>이메일</option>
+                    <option value="phone" {% if search_type == 'phone' %}selected{% endif %}>연락처</option>
+                    <option value="ip" {% if search_type == 'ip' %}selected{% endif %}>최근접속 IP</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <div class="input-group shadow-sm">
+                    <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                    <input type="text" name="keyword" class="form-control" placeholder="검색어를 입력하세요..." value="{{ keyword|default:'' }}">
+                    <button type="submit" class="btn btn-primary px-4">검색</button>
+                    {% if keyword %}
+                    <a href="{% url 'UserAccount:user_list' %}" class="btn btn-outline-secondary">초기화</a>
+                    {% endif %}
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white py-3">
+        <h3 class="card-title align-items-center d-flex">
+            <i class="bi bi-people-fill me-2 text-primary"></i>
+            전체 회원: <strong class="ms-1 text-primary">{{ total_count }}</strong>명
+        </h3>
+    </div>
+    
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-center" style="width: 80px;">SEQ</th>
+                        <th>이름(닉네임)</th>
+                        <th>이메일</th>
+                        <th class="text-center">가입 경로</th> <th>연락처</th>
+                        <th class="text-end">포인트</th>
+                        <th class="text-center">상태</th>
+                        <th>마지막 IP</th>
+                        <th class="text-center">가입일</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td class="text-center text-muted">{{ user.seq }}</td>
+                        <td>
+                            <div class="fw-bold text-dark">{{ user.nickname }}</div>
+                            <small class="text-muted">{{ user.d_name|default:"" }}</small>
+                        </td>
+                        <td>
+                            <a href="{% url 'UserAccount:userDetail' user.seq %}" class="text-decoration-none fw-bold text-primary">
+                                {{ user.dec_email }}
+                            </a>
+                        </td>
+                        
+                        <td class="text-center">
+                            {% if user.provider == 'landmania' %}
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1">
+                                    <i class="bi bi-shield-check me-1"></i>랜드매니아
+                                </span>
+                            {% elif user.provider == 'naver' %}
+                                <span class="badge px-2 py-1" style="background-color: #03C75A; color: white;">
+                                    <i class="bi bi-chat-fill me-1"></i>네이버
+                                </span>
+                            {% elif user.provider == 'kakao' %}
+                                <span class="badge px-2 py-1" style="background-color: #FEE500; color: #191919;">
+                                    <i class="bi bi-chat-fill me-1"></i>카카오
+                                </span>
+                            {% elif user.provider == 'google' %}
+                                <span class="badge bg-white text-dark border px-2 py-1">
+                                    <i class="bi bi-google me-1 text-danger"></i>구글
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary px-2 py-1">{{ user.provider|upper }}</span>
+                            {% endif %}
+                        </td>
+
+                        <td>{{ user.dec_phone|default:"-" }}</td>
+                        <td class="text-end fw-bold text-primary">{{ user.point|default:0 }} P</td>
+                        
+                        <td class="text-center">
+
+                            {% for val, label in status_dict.items %}
+                                {% if user.status == val %}
+                                <span class="badge 
+                                    {% if val == 'ADMIN' %}bg-danger fw-bold
+                                    {% elif val == 'GENERAL' %}bg-success
+                                    {% elif val == 'ASSOCIATE' %}bg-info-subtle text-info border border-info-subtle
+                                    {% elif val == 'VERIFICATION' %}bg-primary
+                                    {% elif val == 'PAID' %}bg-indigo shadow-sm
+                                    {% elif val == 'LOGIN_LOCKED' %}bg-warning text-dark
+                                    {% elif val == 'LOCKED' %}bg-orange text-white
+                                    {% elif val == 'INACTIVE' %}bg-secondary
+                                    {% elif val == 'DELETED' %}bg-light text-muted border
+                                    {% elif val == 'API_DELETED' %}bg-dark-subtle text-decoration-line-through
+                                    {% else %}bg-secondary{% endif %}">
+                                    {{ label }}
+                                </span>
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                        
+                        <td><small class="text-muted">{{ user.dec_ip|default:"-" }}</small></td>
+                        <td class="text-center">
+                            <span class="text-muted" style="font-size: 0.85rem;">{{ user.created_at|date:"Y-m-d" }}</span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center py-5 text-muted">
+                            <i class="bi bi-info-circle d-block mb-2 fs-2"></i>
+                            데이터가 존재하지 않습니다.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card-footer bg-white py-3 d-flex justify-content-between align-items-center">
+        <div class="text-muted small">
+            표시: <strong>{{ users|length }}</strong> / 전체: <strong>{{ total_count }}</strong>
+        </div>
+        <nav aria-label="Page navigation">
+            <ul class="pagination pagination-sm mb-0">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}&search_type={{ search_type }}&keyword={{ keyword }}">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+
+                <li class="page-item active"><a class="page-link" href="#">{{ page_obj.number }}</a></li>
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}&search_type={{ search_type }}&keyword={{ keyword }}">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+</div>
+{% endblock %}

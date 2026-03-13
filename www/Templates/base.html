@@ -1,0 +1,121 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>{% block title %}Admin Landmania{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/source-sans-3@5.0.12/index.css" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.11.0/styles/overlayscrollbars.min.css" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" crossorigin="anonymous" />
+    <link rel="stylesheet" href="{% static 'css/adminlte.min.css' %}" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    {% block extra_css %}{% endblock %}
+  </head>
+
+  <body class="layout-fixed sidebar-expand-lg sidebar-open bg-body-tertiary">
+    <div class="app-wrapper">
+      
+      {% include 'navbar.html' %}
+
+      {% include 'sidebar.html' %}
+
+      <main class="app-main">
+        <div class="app-content-header">
+          <div class="container-fluid">
+            <div class="row">
+              <div class="col-sm-6">
+                <h3 class="mb-0">{% block content_title %}{% endblock %}</h3>
+              </div>
+              <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-end">
+                  <li class="breadcrumb-item"><a href="/">Home</a></li>
+                  <li class="breadcrumb-item active">{% block breadcrumb %}Dashboard{% endblock %}</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="app-content">
+          <div class="container-fluid">
+            {% block content %}{% endblock %}
+          </div>
+        </div>
+      </main>
+
+      <footer class="app-footer">
+        <div class="float-end d-none d-sm-inline">Anything you want</div>
+        <strong>Copyright &copy; 2014-2025 <a href="https://adminlte.io" class="text-decoration-none">AdminLTE.io</a>.</strong>
+        All rights reserved.
+      </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.11.0/browser/overlayscrollbars.browser.es6.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
+    <script src="{% static 'js/adminlte.min.js' %}"></script>
+
+    <script>
+      // 사이드바 스크롤 설정 (기본값)
+      const SELECTOR_SIDEBAR_WRAPPER = '.sidebar-wrapper';
+      document.addEventListener('DOMContentLoaded', function () {
+        const sidebarWrapper = document.querySelector(SELECTOR_SIDEBAR_WRAPPER);
+        if (sidebarWrapper && OverlayScrollbarsGlobal?.OverlayScrollbars !== undefined) {
+          OverlayScrollbarsGlobal.OverlayScrollbars(sidebarWrapper, {
+            scrollbars: { theme: 'os-theme-light', autoHide: 'leave', clickScroll: true },
+          });
+        }
+      });
+    </script>
+    {% if messages %}
+    <div id="django-messages" style="display: none;">
+        {% for message in messages %}
+            <div class="django-message" 
+                data-level="{{ message.tags }}" 
+                data-text="{{ message }}"></div>
+        {% endfor %}
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const messageElements = document.querySelectorAll('.django-message');
+            
+            messageElements.forEach(el => {
+                const level = el.dataset.level;
+                const text = el.dataset.text;
+                
+                // Django 태그와 SweetAlert2 아이콘 매핑
+                let icon = 'info';
+                let title = '알림';
+                
+                if (level === 'success') { 
+                    icon = 'success'; 
+                    title = '성공!'; 
+                } else if (level === 'error' || level === 'danger') { 
+                    icon = 'error'; 
+                    title = '오류 발생'; 
+                } else if (level === 'warning') { 
+                    icon = 'warning'; 
+                    title = '경고'; 
+                }
+
+                Swal.fire({
+                    icon: icon,
+                    title: title,
+                    text: text,
+                    confirmButtonColor: '#4e73df',
+                    timer: 3000,
+                    timerProgressBar: true,
+                    toast: false, // 중앙 팝업 형태
+                    showConfirmButton: true
+                });
+            });
+        });
+    </script>
+    {% endif %}
+    {% block extra_js %}{% endblock %}
+  </body>
+</html>

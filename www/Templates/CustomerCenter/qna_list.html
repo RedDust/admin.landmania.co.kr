@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block page_title %}1:1 문의 내역{% endblock %}
+{% block content_title %}1:1 문의 내역{% endblock %}
+{% block content %}
+<div class="card shadow-sm">
+    <div class="btn-group mb-3">
+        <a href="?status=" class="btn btn-sm {% if not status_filter %}btn-dark{% else %}btn-outline-dark{% endif %}">전체</a>
+        <a href="?status=WAITING" class="btn btn-sm {% if status_filter == 'WAITING' %}btn-warning{% else %}btn-outline-warning{% endif %}">답변대기</a>
+        <a href="?status=COMPLETED" class="btn btn-sm {% if status_filter == 'COMPLETED' %}btn-success{% else %}btn-outline-success{% endif %}">답변완료</a>
+    </div>       
+    <div class="card-header bg-white">
+        <h3 class="card-title">전체 문의: <strong>{{ total_count }}</strong>건</h3>
+    </div>
+ 
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 80px;">번호</th>
+                        <th style="width: 120px;">분류</th>
+                        <th>제목</th>
+                        <th style="width: 180px;">작성자</th>
+                        <th style="width: 120px;">상태</th>
+                        <th style="width: 150px;">등록일</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in inquiries %}
+                    <tr>
+                        <td>{{ item.seq }}</td>
+                        <td>
+                            <span class="badge text-bg-light border">{{ item.category }}</span>
+                        </td>
+                        <td>
+                            <a href="{% url 'CustomerCenter:qna_detail' item.seq %}" class="text-decoration-none text-dark fw-bold">
+                                {{ item.display_title }}
+                            </a>
+                        </td>
+                        <td>
+                            <div class="d-flex flex-column">
+                                <span>{{ item.dec_user_email }}</span>
+                                <small class="text-muted">({{ item.user_nickname }})</small>
+                            </div>
+                        </td>
+                        <td>
+                            {% if item.status == 'WAITING' %}
+                                <span class="badge text-bg-warning">답변대기</span>
+                            {% else %}
+                                <span class="badge text-bg-success">답변완료</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ item.created_at|date:"Y-m-d H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-center py-4">문의 내역이 없습니다.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+        <div class="small text-muted">Showing {{ inquiries|length }} of {{ total_count }} entries</div>
+        <nav>
+            <ul class="pagination pagination-sm mb-0">
+                {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">이전</a></li>
+                {% endif %}
+                <li class="page-item active"><a class="page-link" href="#">{{ page_obj.number }}</a></li>
+                {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">다음</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+</div>
+{% endblock %}

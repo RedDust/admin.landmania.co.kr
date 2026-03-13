@@ -1,0 +1,197 @@
+{% load static %}
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LandMania | Admin Authentication</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/source-sans-3@5.0.12/index.css" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" crossorigin="anonymous" />
+    <link rel="stylesheet" href="{% static 'css/adminlte.min.css' %}" />
+
+    <style>
+      :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --glass-bg: rgba(255, 255, 255, 0.9);
+      }
+
+      body.login-page {
+        /* 세련된 딥 퍼플/블루 그라데이션 배경 */
+        background: #0f172a;
+        background-image: 
+          radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
+          radial-gradient(at 100% 100%, rgba(147, 51, 234, 0.15) 0px, transparent 50%);
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Source Sans 3', sans-serif;
+      }
+
+      /* 나타나기 애니메이션 */
+      @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .login-box {
+        width: 420px;
+        animation: fadeInUp 0.6s ease-out;
+      }
+
+      /* 글래스모피즘 카드 */
+      .card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 1.5rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      }
+
+      .card-header {
+        background: transparent;
+        border-bottom: none;
+        padding-top: 3rem;
+      }
+
+      .brand-text {
+        font-size: 1.8rem;
+        letter-spacing: -1px;
+        color: #1e293b;
+      }
+
+      /* 입력 필드 스타일 고도화 */
+      .form-floating > .form-control {
+        border-radius: 0.8rem;
+        border: 1px solid #e2e8f0;
+        background-color: #ffffff;
+      }
+
+      .form-control:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+      }
+
+      .input-group-text {
+        background-color: #ffffff;
+        border-radius: 0 0.8rem 0.8rem 0;
+        border-left: none;
+        color: #64748b;
+      }
+
+      /* 버튼 커스텀 */
+      .btn-primary {
+        background: var(--primary-gradient);
+        border: none;
+        border-radius: 0.8rem;
+        padding: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+      }
+
+      .btn-primary:hover {
+        transform: scale(1.02);
+        box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.4);
+        opacity: 0.9;
+      }
+
+      .login-box-msg {
+        color: #475569;
+        font-weight: 500;
+      }
+
+      .form-check-input:checked {
+        background-color: #6366f1;
+        border-color: #6366f1;
+      }
+
+      /* 에러 메시지 스타일 */
+      .alert-danger {
+        border-radius: 0.8rem;
+        font-size: 0.85rem;
+        border: none;
+        background-color: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+      }
+    </style>
+  </head>
+
+  <body class="login-page">
+    <div class="login-box">
+      <div class="card">
+        <div class="card-header text-center">
+          <div class="mb-3">
+            <img src="{% static 'img/AdminLTELogo.png' %}" alt="Logo" class="img-circle elevation-2" style="width: 70px; background: #fff;">
+          </div>
+          <h1 class="brand-text mb-0">
+            <span class="fw-extrabold text-indigo" style="color: #4f46e5;">LandMania</span> 
+            <span class="fw-light text-secondary">Manager</span>
+          </h1>
+        </div>
+        
+        <div class="card-body login-card-body p-4">
+          <p class="login-box-msg mb-4">보안을 위해 관리자 인증이 필요합니다</p>
+
+          {% if messages %}
+            {% for message in messages %}
+              <div class="alert alert-danger mb-3 py-2 text-center">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+
+          <form action="{% url 'AdminAccount:doLogin' %}" method="post">
+            {% csrf_token %}
+            
+            <div class="input-group mb-3">
+              <div class="form-floating">
+                <input id="loginEmail" name="username" type="text" class="form-control" placeholder="ID" required autofocus />
+                <label for="loginEmail" class="text-secondary">아이디</label>
+              </div>
+              <div class="input-group-text"><span class="bi bi-person-badge"></span></div>
+            </div>
+
+            <div class="input-group mb-4">
+              <div class="form-floating">
+                <input id="loginPassword" name="password" type="password" class="form-control" placeholder="Password" required />
+                <label for="loginPassword" class="text-secondary">비밀번호</label>
+              </div>
+              <div class="input-group-text"><span class="bi bi-shield-lock"></span></div>
+            </div>
+
+            <div class="row align-items-center">
+              <div class="col-7">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="remember" id="rememberMe" />
+                  <label class="form-check-label text-muted" for="rememberMe" style="font-size: 0.85rem;">
+                    로그인 상태 유지
+                  </label>
+                </div>
+              </div>
+              <div class="col-5">
+                <button type="submit" class="btn btn-primary w-100 shadow">로그인</button>
+              </div>
+            </div>
+          </form>
+
+          <div class="mt-4 pt-3 border-top text-center">
+            <a href="#" class="text-decoration-none small text-muted hover-primary">
+              <i class="bi bi-question-circle me-1"></i>계정 정보를 분실하셨나요?
+            </a>
+          </div>
+        </div>
+      </div>
+      
+      <p class="text-center mt-4 text-white-50 small">
+        Copyright &copy; 2026 <b>LandMania</b>. All rights reserved.
+      </p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+    <script src="{% static 'js/adminlte.min.js' %}"></script>
+  </body>
+</html>
